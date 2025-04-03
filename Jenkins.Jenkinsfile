@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        SONAR_TOKEN = credentials('SONAR_TOKEN')
+        SONAR_TOKEN = credentials('SonarQube-Token')
     }
     stages {
         stage('Checkout Code') {
@@ -20,8 +20,6 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=spring-petclinic \
-                        -Dsonar.projectName="Spring PetClinic" \
                         -Dsonar.host.url=http://sonarqube:9000 \
                         -Dsonar.token=$SONAR_TOKEN
                     '''
