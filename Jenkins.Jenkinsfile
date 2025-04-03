@@ -12,6 +12,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 sh 'mvn clean package'
+                sh 'mvn spring-javaformat:apply'
             }
         }
         stage('SonarQube Analysis') {
