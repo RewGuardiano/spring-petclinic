@@ -7,7 +7,6 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/RewGuardiano/rew-spring-petclinic.git',
-                    credentialsId: 'github-pat'
             }
         }
         stage('Build & Test') {
