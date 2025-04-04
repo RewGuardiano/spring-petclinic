@@ -14,6 +14,7 @@ pipeline {
         
         stage('Build & Test') {
             steps {
+                sh 'rm -rf terraform/.terraform'
                 sh 'mvn spring-javaformat:apply'
                 sh 'mvn clean package'
             }
