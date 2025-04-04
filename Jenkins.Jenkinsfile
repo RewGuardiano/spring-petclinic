@@ -32,9 +32,11 @@ pipeline {
         }
         stage('Provision AWS Resources') {
             steps {
-                dir('terraform') {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                withAWS(credentials: 'aws-credentials') {
+                    dir('terraform') {
+                        sh 'terraform init'
+                        sh 'terraform apply -auto-approve'
+                    }
                 }
             }
         }
