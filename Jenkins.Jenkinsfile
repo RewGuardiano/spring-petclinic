@@ -1,17 +1,18 @@
 pipeline {
     agent any
-    
+
     environment {
         SONAR_TOKEN = credentials('SonarQube-Token')
+        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
     }
-    
+
     stages {
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/RewGuardiano/rew-spring-petclinic.git'
             }
         }
-        
+
         stage('Build & Test') {
             steps {
                 sh 'rm -rf terraform/.terraform'
@@ -19,7 +20,7 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
-        
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -31,6 +32,15 @@ pipeline {
                 }
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t rewguardiano/petclinic:latest .'
+                sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
+                sh 'docker push rewguardiano/petclinic:latest'
+            }
+        }
+
         stage('Provision AWS Resources') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
