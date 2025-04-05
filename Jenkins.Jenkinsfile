@@ -51,5 +51,14 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to AWS') {
+            steps {
+                script {
+                    def ec2Ip = sh(script: 'terraform output -raw instance_public_ip', returnStdout: true).trim()
+                    sh "ssh -i /path/to/AWS_Key_Pair.pem ec2-user@${ec2Ip} 'docker pull rewguardiano/petclinic:latest && docker run -d -p 8081:8081 rewguardiano/petclinic:latest'"
+                }
+            }
+        }
     }
 }
