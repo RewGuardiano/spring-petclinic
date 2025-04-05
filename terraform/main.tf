@@ -5,7 +5,7 @@ provider "aws" {
 resource "aws_instance" "app_server" {
   ami           = "ami-088c89fc150027121" # Amazon Linux 2 AMI
   instance_type = var.instance_type
-  key_name      = var.key_name
+  key_name      = AWS_Key_Pair
   security_groups = [aws_security_group.app_sg.name]
 
   user_data = <<-EOF
