@@ -48,9 +48,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t rewguardiano/petclinic:latest .'
+                sh 'docker build -t rewg/petclinic:latest .'
                 sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
-                sh 'docker push rewguardiano/petclinic:latest'
+                sh 'docker push rewg/petclinic:latest'
             }
         }
 
@@ -63,8 +63,8 @@ pipeline {
                             sh """
                                 ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
                                     sudo service docker start &&
-                                    docker pull rewguardiano/petclinic:latest && 
-                                    docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewguardiano/petclinic:latest
+                                    docker pull rewg/petclinic:latest && 
+                                    docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest
                                 '
                             """
                         }
