@@ -3,7 +3,7 @@ terraform {
         bucket         = "rew-state-bucket"
         key            = "petclinic/terraform.tfstate"
         region         = "eu-north-1"
-        dynamodb_table = "terraform-locks"
+        dynamodb_endpoint = "dynamodb.eu-north-1.amazonaws.com"
     }
 }
 
