@@ -1,6 +1,6 @@
 terraform {
     backend "s3" {
-        bucket         = "my-terraform-state-bucket"
+        bucket         = "rew-state-bucket"
         key            = "petclinic/terraform.tfstate"
         region         = "eu-north-1"
         dynamodb_table = "terraform-locks"
