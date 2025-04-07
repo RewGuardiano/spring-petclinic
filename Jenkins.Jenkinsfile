@@ -37,7 +37,7 @@ pipeline {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
                         sh 'terraform init'
-                        sh 'terraform workspace select default || terraform workspace new default'
+                        sh 'terraform destroy -auto-approve || true' // Clean up existing resources
                         sh 'terraform apply -auto-approve'
                     }
                 }
