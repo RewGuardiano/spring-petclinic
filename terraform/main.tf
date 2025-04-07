@@ -44,12 +44,11 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_instance" "app_server" {
-    ami           = "ami-0c7ed0d4a229b7e38"
-    instance_type = "t3.micro"
-    key_name      = "AWS_Key_Pair"
-    vpc_security_group_ids = [aws_security_group.app_sg.id]
-    subnet_id     = "subnet-0c9d8e7f1g2h3i4j5"
-    associate_public_ip_address = true
+  ami           = "ami-088c89fc150027121" # Amazon Linux 2 AMI
+  instance_type = var.instance_type
+  key_name      = "AWS_Key_Pair"
+  security_groups = [aws_security_group.app_sg.name]
+  associate_public_ip_address = true
 
     user_data = <<-EOF
         #!/bin/bash
