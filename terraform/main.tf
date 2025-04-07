@@ -45,4 +45,13 @@ resource "aws_security_group" "app_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+terraform {
+    backend "s3" {
+        bucket         = "my-terraform-state-bucket"
+        key            = "petclinic/terraform.tfstate"
+        region         = "eu-north-1"
+        dynamodb_table = "terraform-locks"
+    }
+}
 }
