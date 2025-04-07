@@ -32,12 +32,13 @@ pipeline {
             }
         }
 
+        ## Provision AWS Resources
         stage('Provision AWS Resources') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
                         sh '''
-                            terraform init -reconfigure \
+                            terraform init \
                             -backend-config="bucket=rew-state-bucket" \
                             -backend-config="key=petclinic/terraform.tfstate" \
                             -backend-config="region=eu-north-1" \
