@@ -1,9 +1,9 @@
 terraform {
     backend "s3" {
-        bucket         = "rew-state-bucket"
-        key            = "petclinic/terraform.tfstate"
-        region         = "eu-north-1"
-        dynamodb_endpoint = "dynamodb.eu-north-1.amazonaws.com"
+        bucket            = "rew-state-bucket"
+        key               = "petclinic/terraform.tfstate"
+        region            = "eu-north-1"
+        dynamodb_endpoint = "https://dynamodb.eu-north-1.amazonaws.com"
     }
 }
 
