@@ -38,7 +38,7 @@ pipeline {
                     dir('terraform') {
                         sh '''
                             terraform init -reconfigure \
-                            -backend-config="bucket=my-terraform-state-bucket" \
+                            -backend-config="bucket=rew-state-bucket" \
                             -backend-config="key=petclinic/terraform.tfstate" \
                             -backend-config="region=eu-north-1" \
                             -backend-config="dynamodb_table=terraform-locks" \
