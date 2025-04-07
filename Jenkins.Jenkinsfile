@@ -31,18 +31,11 @@ pipeline {
                 }
             }
         }
-        stage('Provision AWS Resources') {
+         stage('Provision AWS Resources') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
-                        sh '''
-                            terraform init \
-                            -backend-config="bucket=rew-state-bucket" \
-                            -backend-config="key=petclinic/terraform.tfstate" \
-                            -backend-config="region=eu-north-1" \
-                            -backend-config="dynamodb_table=terraform-locks" \
-                            -migrate-state -force-copy
-                        '''
+                        sh 'terraform init -migrate-state -force-copy'
                         sh 'terraform destroy -auto-approve || true'
                         sh 'terraform apply -auto-approve'
                     }
