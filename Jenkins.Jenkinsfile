@@ -31,8 +31,6 @@ pipeline {
                 }
             }
         }
-
-        ## Provision AWS Resources
         stage('Provision AWS Resources') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
