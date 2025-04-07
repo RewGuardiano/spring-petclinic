@@ -36,8 +36,15 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
-                        sh 'terraform init'
-                        sh 'terraform destroy -auto-approve || true' // Clean up existing resources
+                        sh '''
+                            terraform init -reconfigure \
+                            -backend-config="bucket=my-terraform-state-bucket" \
+                            -backend-config="key=petclinic/terraform.tfstate" \
+                            -backend-config="region=eu-north-1" \
+                            -backend-config="dynamodb_table=terraform-locks" \
+                            -migrate-state -force-copy
+                        '''
+                        sh 'terraform destroy -auto-approve || true'
                         sh 'terraform apply -auto-approve'
                     }
                 }
