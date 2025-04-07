@@ -38,6 +38,7 @@ pipeline {
                         sh 'terraform init -migrate-state -force-copy'
                         sh 'terraform destroy -auto-approve || true'
                         sh 'terraform apply -auto-approve'
+                        sh 'terraform output instance_public_ip' // Print the public IP to the console
                     }
                 }
             }
