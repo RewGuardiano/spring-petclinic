@@ -36,7 +36,7 @@ pipeline {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
                         sh 'terraform init -migrate-state -force-copy'
-                        sh 'terraform destroy -auto-approve || true'
+                        sh 'terraform destroy -auto-approve'
                         sh 'terraform apply -auto-approve'
                         sh 'terraform output instance_public_ip' // Print the public IP to the console
                         sh 'terraform destroy -auto-approve'
