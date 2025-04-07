@@ -4,6 +4,7 @@ terraform {
         key               = "petclinic/terraform.tfstate"
         region            = "eu-north-1"
         dynamodb_endpoint = "https://dynamodb.eu-north-1.amazonaws.com"
+        dynamodb_table    = "terraform-locks"
     }
 }
 
