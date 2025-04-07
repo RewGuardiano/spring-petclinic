@@ -40,7 +40,7 @@ pipeline {
                         sh 'terraform init -migrate-state -force-copy'
                         sh 'terraform destroy -auto-approve'
                         sh 'terraform apply -auto-approve'
-                        sh 'terraform output instance_public_ip' // Print the public IP
+                        sh 'terraform output instance_public_ip'
                     }
                 }
             }
@@ -78,6 +78,7 @@ pipeline {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
                         sh 'terraform destroy -auto-approve'
+                        sh 'aws ec2 describe-security-groups --region eu-north-1 --filters Name=tag:Name,Values=PetClinicSG --query "SecurityGroups[*].GroupName" --output text || true'
                     }
                 }
             }
