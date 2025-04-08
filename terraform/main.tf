@@ -44,23 +44,29 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-088c89fc150027121" # Amazon Linux 2 AMI
-  instance_type = var.instance_type
+  ami           = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 AMI (update if necessary for eu-north-1)
+  instance_type = "t3.micro"
   key_name      = "AWS_Key_Pair"
-  security_groups = [aws_security_group.app_sg.name]
-  associate_public_ip_address = true
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
 
-    user_data = <<-EOF
-        #!/bin/bash
-        sudo yum update -y
-        sudo amazon-linux-extras install docker -y
-        sudo service docker start
-        sudo usermod -a -G docker ec2-user
-    EOF
+  # User data script to install Docker
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update the package index
+              sudo yum update -y
+              # Install Docker
+              sudo yum install -y docker
+              # Start Docker service
+              sudo service docker start
+              # Enable Docker to start on boot
+              sudo systemctl enable docker
+              # Add the ec2-user to the docker group to run Docker commands without sudo
+              sudo usermod -aG docker ec2-user
+              EOF
 
-    tags = {
-        Name = "PetClinicServer"
-    }
+  tags = {
+    Name = "PetClinicServer"
+  }
 }
 
 output "instance_public_ip" {
