@@ -64,6 +64,7 @@ pipeline {
                                 sh 'echo "SSH_KEY path: $SSH_KEY"'
                                 // Set permissions on the temporary key file to 400 (read-only by owner)
                                 sh 'chmod 400 $SSH_KEY'
+                                sh 'ls -l $SSH_KEY'
                                 // Run the ssh command
                                 sh "ssh -i $SSH_KEY ec2-user@${ec2Ip} 'sudo service docker start && docker pull rewg/petclinic:latest && docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest'"
                             }
