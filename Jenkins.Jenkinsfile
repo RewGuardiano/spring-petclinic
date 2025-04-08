@@ -59,15 +59,14 @@ pipeline {
                     dir('terraform') {
                         script {
                             def ec2Ip = sh(script: 'terraform output -raw instance_public_ip', returnStdout: true).trim()
-                            withCredentials([file(credentialsId: 'aws-key-pair', variable: 'SSH_KEY')]) {
-                                // Debug: Print the SSH_KEY variable to confirm its value
-                                sh 'echo "SSH_KEY path: $SSH_KEY"'
-                                // Set permissions on the temporary key file to 400 (read-only by owner)
-                                sh 'chmod 444 $SSH_KEY'
-                                sh 'ls -l $SSH_KEY'
-                                // Run the ssh command
-                                sh "ssh -i $SSH_KEY ec2-user@${ec2Ip} 'sudo service docker start && docker pull rewg/petclinic:latest && docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest'"
-                            }
+                            sh 'ls -l /var/jenkins_home/AWS_Key_Pair.pem'
+                            sh """
+                                ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
+                                    sudo service docker start &&
+                                    docker pull rewg/petclinic:latest && 
+                                    docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest
+                                '
+                            """
                         }
                     }
                 }
