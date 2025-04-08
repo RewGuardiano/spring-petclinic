@@ -44,7 +44,7 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 AMI (update if necessary for eu-north-1)
+  ami           = "ami-088c89fc150027121" # Amazon Linux 2 AMI
   instance_type = "t3.micro"
   key_name      = "AWS_Key_Pair"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
