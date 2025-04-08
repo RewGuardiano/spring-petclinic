@@ -44,24 +44,32 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-088c89fc150027121" # Amazon Linux 2 AMI
+  ami           = "ami-088c89fc150027121" # 
   instance_type = "t3.micro"
   key_name      = "AWS_Key_Pair"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
-  # User data script to install Docker
   user_data = <<-EOF
               #!/bin/bash
+              set -e  # Exit on any error
+              echo "Starting user_data script..." > /var/log/user-data.log
               # Update the package index
-              sudo yum update -y
+              sudo yum update -y >> /var/log/user-data.log 2>&1
+              # Install prerequisites
+              sudo yum install -y yum-utils >> /var/log/user-data.log 2>&1
+              # Add Docker repository
+              sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >> /var/log/user-data.log 2>&1
               # Install Docker
-              sudo yum install -y docker
+              sudo yum install -y docker-ce docker-ce-cli containerd.io >> /var/log/user-data.log 2>&1
               # Start Docker service
-              sudo service docker start
+              sudo systemctl start docker >> /var/log/user-data.log 2>&1
               # Enable Docker to start on boot
-              sudo systemctl enable docker
-              # Add the ec2-user to the docker group to run Docker commands without sudo
-              sudo usermod -aG docker ec2-user
+              sudo systemctl enable docker >> /var/log/user-data.log 2>&1
+              # Add the ec2-user to the docker group
+              sudo usermod -aG docker ec2-user >> /var/log/user-data.log 2>&1
+              # Verify Docker installation
+              sudo -u ec2-user docker --version >> /var/log/user-data.log 2>&1
+              echo "user_data script completed." >> /var/log/user-data.log
               EOF
 
   tags = {
