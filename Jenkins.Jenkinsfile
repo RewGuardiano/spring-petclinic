@@ -59,11 +59,24 @@ pipeline {
                     dir('terraform') {
                         script {
                             def ec2Ip = sh(script: 'terraform output -raw instance_public_ip', returnStdout: true).trim()
+                            // Set correct permissions and ownership for the key file
+                            sh 'chmod 400 /var/jenkins_home/AWS_Key_Pair.pem'
+                            sh 'chown jenkins:jenkins /var/jenkins_home/AWS_Key_Pair.pem'
+                            // Display permissions to confirm
                             sh 'ls -l /var/jenkins_home/AWS_Key_Pair.pem'
                             sh """
-                                ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
-                                    sudo service docker start &&
-                                    docker pull rewg/petclinic:latest && 
+                                ssh -i /var/jenkins_home/AWS_Key_Pair.pem ec2-user@${ec2Ip} '
+                                    # Install Docker if not already installed
+                                    if ! command -v docker &> /dev/null; then
+                                        sudo yum update -y &&
+                                        sudo yum install -y docker &&
+                                        sudo usermod -aG docker ec2-user &&
+                                        sudo systemctl enable docker &&
+                                        sudo systemctl start docker;
+                                    else
+                                        sudo systemctl start docker;
+                                    fi &&
+                                    docker pull rewg/petclinic:latest &&
                                     docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest
                                 '
                             """
