@@ -64,11 +64,21 @@ pipeline {
                             sh """
                                 ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
                                     echo "Checking Docker installation..." &&
-                                    sg docker -c "docker --version" &&
-                                    echo "Pulling Docker image..." &&
-                                    sg docker -c "docker pull rewg/petclinic:latest" &&
-                                    echo "Running Docker container..." &&
-                                    sg docker -c "docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest"
+                                    if getent group docker >/dev/null; then
+                                        echo "Docker group exists, using sg..." &&
+                                        sg docker -c "docker --version" &&
+                                        echo "Pulling Docker image..." &&
+                                        sg docker -c "docker pull rewg/petclinic:latest" &&
+                                        echo "Running Docker container..." &&
+                                        sg docker -c "docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest";
+                                    else
+                                        echo "Docker group does not exist, using sudo..." &&
+                                        sudo docker --version &&
+                                        echo "Pulling Docker image..." &&
+                                        sudo docker pull rewg/petclinic:latest &&
+                                        echo "Running Docker container..." &&
+                                        sudo docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest;
+                                    fi
                                 '
                             """
                         }
