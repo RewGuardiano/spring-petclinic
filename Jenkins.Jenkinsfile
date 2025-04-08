@@ -61,6 +61,7 @@ pipeline {
                     dir('terraform') {
                         script {
                             def ec2Ip = sh(script: 'terraform output -raw instance_public_ip', returnStdout: true).trim()
+                            sh 'ls -l /var/jenkins_home/AWS_Key_Pair.pem'
                             sh """
                                 ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
                                     sudo service docker start &&
