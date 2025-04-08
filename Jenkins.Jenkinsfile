@@ -64,7 +64,7 @@ pipeline {
                                 sh """
                                     ssh -i \$SSH_KEY -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
                                         sudo service docker start &&
-                                        docker pull rewg/petclinic:latest && 
+                                        docker pull rewg/petclinic:latest &&
                                         docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest
                                     '
                                 """
