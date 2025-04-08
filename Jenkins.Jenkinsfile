@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     environment {
         SONAR_TOKEN = credentials('SonarQube-Token')
         DOCKER_CREDENTIALS = credentials('docker-credentials')
@@ -60,10 +59,12 @@ pipeline {
                     dir('terraform') {
                         script {
                             def ec2Ip = sh(script: 'terraform output -raw instance_public_ip', returnStdout: true).trim()
-                            withCredentials([sshUserPrivateKey(credentialsId: 'aws-key-pair', keyFileVariable: 'SSH_KEY')]) {
+                            withCredentials([file(credentialsId: 'aws-key-pair', variable: 'SSH_KEY')]) {
                                 // Debug: Print the SSH_KEY variable to confirm its value
                                 sh 'echo "SSH_KEY path: $SSH_KEY"'
-                                // Run the ssh command in a single line to avoid formatting issues
+                                // Set permissions on the temporary key file to 400 (read-only by owner)
+                                sh 'chmod 400 $SSH_KEY'
+                                // Run the ssh command
                                 sh "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no ec2-user@${ec2Ip} 'sudo service docker start && docker pull rewg/petclinic:latest && docker run -d -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest'"
                             }
                         }
