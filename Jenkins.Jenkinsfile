@@ -108,8 +108,7 @@ pipeline {
                 }
             }
         }
-
-       post {
+        post {
             always {
                 stage('Cleanup') {
                     withAWS(credentials: 'aws-credentials') {
