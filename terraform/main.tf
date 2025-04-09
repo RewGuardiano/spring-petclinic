@@ -43,11 +43,11 @@ resource "aws_security_group" "app_sg" {
     }
 }
 
-resource "aws_internet_gateway" "igw" {
-  vpc_id = "vpc-044bc9e9528107aed"
-
-  tags = {
-    Name = "PetClinicIGW"
+# Reference the existing Internet Gateway
+data "aws_internet_gateway" "existing_igw" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = ["vpc-044bc9e9528107aed"]
   }
 }
 
@@ -56,7 +56,7 @@ resource "aws_route_table" "public_rt" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = data.aws_internet_gateway.existing_igw.internet_gateway_id
   }
 
   tags = {
@@ -65,7 +65,7 @@ resource "aws_route_table" "public_rt" {
 }
 
 resource "aws_route_table_association" "public_subnet_association" {
-  subnet_id      = "subnet-098f458e7260ac711" # Replace with the correct subnet ID
+  subnet_id      = "subnet-098f458e7260ac711" 
   route_table_id = aws_route_table.public_rt.id
 }
 
@@ -74,7 +74,7 @@ resource "aws_instance" "app_server" {
   instance_type = "t3.micro"
   key_name      = "AWS_Key_Pair"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
-  subnet_id      = "subnet-098f458e7260ac711" # Replace with the correct subnet ID
+  subnet_id      = "subnet-098f458e7260ac711" 
 
   user_data = <<-EOF
               #!/bin/bash
@@ -113,7 +113,6 @@ resource "aws_instance" "app_server" {
     Name = "PetClinicServer"
   }
 }
-
 output "instance_public_ip" {
     value = aws_instance.app_server.public_ip
 }
