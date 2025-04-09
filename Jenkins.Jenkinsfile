@@ -53,7 +53,7 @@ pipeline {
             }
         }
 
-       stage('Deploy to AWS') {
+        stage('Deploy to AWS') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
@@ -108,9 +108,12 @@ pipeline {
                 }
             }
         }
-        post {
-            always {
-                stage('Cleanup') {
+    }
+
+    post {
+        always {
+            stage('Cleanup') {
+                steps {
                     withAWS(credentials: 'aws-credentials') {
                         dir('terraform') {
                             sh 'terraform destroy -auto-approve'
