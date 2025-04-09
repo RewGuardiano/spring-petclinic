@@ -109,14 +109,4 @@ pipeline {
             }
         }
     }
-
-   post {
-        always {
-            withAWS(credentials: 'aws-credentials') {
-                dir('terraform') {
-                    sh 'terraform destroy -auto-approve'
-                }
-            }
-        }
-    }
 }
