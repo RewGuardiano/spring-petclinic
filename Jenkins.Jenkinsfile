@@ -45,6 +45,12 @@ pipeline {
             }
         }
 
+        stage('Debug User') {
+            steps {
+                sh 'whoami'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t rewg/petclinic:latest .'
