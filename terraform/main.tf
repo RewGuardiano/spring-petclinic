@@ -74,7 +74,7 @@ resource "aws_instance" "app_server" {
   instance_type = "t3.micro"
   key_name      = "AWS_Key_Pair"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
-  subnet_id      = "subnet-098f458e7260ac711" 
+  subnet_id      = "subnet-098f458e7260ac711" # Replace with the correct subnet ID
 
   user_data = <<-EOF
               #!/bin/bash
@@ -90,8 +90,15 @@ resource "aws_instance" "app_server" {
               if sudo amazon-linux-extras install docker -y >> /var/log/user-data.log 2>&1; then
                   echo "Docker installed via amazon-linux-extras" >> /var/log/user-data.log
               else
-                  echo "Falling back to manual Docker installation..." >> /var/log/user-data.log
-                  sudo yum install -y docker >> /var/log/user-data.log 2>&1
+                  echo "Falling back to yum install docker..." >> /var/log/user-data.log
+                  if sudo yum install -y docker >> /var/log/user-data.log 2>&1; then
+                      echo "Docker installed via yum" >> /var/log/user-data.log
+                  else
+                      echo "Falling back to Docker official repository..." >> /var/log/user-data.log
+                      sudo yum install -y yum-utils >> /var/log/user-data.log 2>&1
+                      sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >> /var/log/user-data.log 2>&1
+                      sudo yum install -y docker-ce docker-ce-cli containerd.io >> /var/log/user-data.log 2>&1
+                  fi
               fi
               echo "Starting Docker service..." >> /var/log/user-data.log
               sudo systemctl start docker >> /var/log/user-data.log 2>&1
