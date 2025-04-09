@@ -109,12 +109,13 @@ pipeline {
             }
         }
 
-        stage('Cleanup') {
-            steps {
-                withAWS(credentials: 'aws-credentials') {
-                    dir('terraform') {
-                        sh 'terraform destroy -auto-approve'
-                        sh 'aws ec2 describe-security-groups --region eu-north-1 --filters Name=tag:Name,Values=PetClinicSG --query "SecurityGroups[*].GroupName" --output text || true'
+       post {
+            always {
+                stage('Cleanup') {
+                    withAWS(credentials: 'aws-credentials') {
+                        dir('terraform') {
+                            sh 'terraform destroy -auto-approve'
+                        }
                     }
                 }
             }
