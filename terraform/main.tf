@@ -89,12 +89,16 @@ data "aws_internet_gateway" "existing_igw" {
     }
 }
 
+# Reference the existing route table associated with the subnet
+data "aws_route_table" "existing_rt" {
+    subnet_id = "subnet-098f458e7260ac711"
+}
 
 # Update the existing route table to include the route to the Internet Gateway
 resource "aws_route" "internet_access" {
-  route_table_id         = data.aws_route_table.existing_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = data.aws_internet_gateway.existing_igw.internet_gateway_id
+    route_table_id         = data.aws_route_table.existing_rt.id
+    destination_cidr_block = "0.0.0.0/0"
+    gateway_id             = data.aws_internet_gateway.existing_igw.internet_gateway_id
 }
 
 resource "aws_instance" "app_server" {
