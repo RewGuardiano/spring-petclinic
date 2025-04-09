@@ -64,6 +64,14 @@ pipeline {
                             sh """
                                 ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
                                     echo "Checking Docker installation..." &&
+                                    if ! command -v docker >/dev/null 2>&1; then
+                                        echo "Docker not found, attempting to install..." &&
+                                        sudo yum update -y &&
+                                        sudo amazon-linux-extras install docker -y &&
+                                        sudo systemctl start docker &&
+                                        sudo systemctl enable docker &&
+                                        sudo usermod -aG docker ec2-user;
+                                    fi &&
                                     if getent group docker >/dev/null; then
                                         echo "Docker group exists, using sg..." &&
                                         sg docker -c "docker --version" &&
