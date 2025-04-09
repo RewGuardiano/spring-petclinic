@@ -96,11 +96,9 @@ pipeline {
     }
     post {
         always {
-            stage('Cleanup') {
-                withAWS(credentials: 'aws-credentials') {
-                    dir('terraform') {
-                        sh 'terraform destroy -auto-approve'
-                    }
+            withAWS(credentials: 'aws-credentials') {
+                dir('terraform') {
+                    sh 'terraform destroy -auto-approve'
                 }
             }
         }
