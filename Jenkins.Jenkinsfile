@@ -67,10 +67,24 @@ pipeline {
                                     if ! command -v docker >/dev/null 2>&1; then
                                         echo "Docker not found, attempting to install..." &&
                                         sudo yum update -y &&
-                                        sudo amazon-linux-extras install docker -y &&
-                                        sudo systemctl start docker &&
-                                        sudo systemctl enable docker &&
-                                        sudo usermod -aG docker ec2-user;
+                                        if sudo amazon-linux-extras install docker -y; then
+                                            echo "Docker installed via amazon-linux-extras" &&
+                                            sudo systemctl start docker &&
+                                            sudo systemctl enable docker &&
+                                            sudo usermod -aG docker ec2-user;
+                                        else
+                                            echo "Falling back to Docker official repository..." &&
+                                            sudo yum install -y yum-utils &&
+                                            sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &&
+                                            sudo yum install -y docker-ce docker-ce-cli containerd.io &&
+                                            sudo systemctl start docker &&
+                                            sudo systemctl enable docker &&
+                                            sudo usermod -aG docker ec2-user;
+                                        fi;
+                                    fi &&
+                                    if ! command -v docker >/dev/null 2>&1; then
+                                        echo "Docker installation failed, exiting..." &&
+                                        exit 1;
                                     fi &&
                                     if getent group docker >/dev/null; then
                                         echo "Docker group exists, using sg..." &&
