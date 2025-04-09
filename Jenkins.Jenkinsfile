@@ -1,43 +1,58 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        SONAR_TOKEN = credentials('SonarQube-Token')
+        DOCKER_CREDENTIALS = credentials('docker-credentials')
     }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/RewGuardiano/rew-spring-petclinic.git', branch: 'main'
+                git branch: 'main', url: 'https://github.com/RewGuardiano/rew-spring-petclinic.git'
             }
         }
-        stage('Build') {
+
+        stage('Build & Test') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'rm -rf terraform/.terraform'
+                sh 'mvn spring-javaformat:apply'
+                sh 'mvn clean package'
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN'
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.token=$SONAR_TOKEN
+                    '''
                 }
             }
         }
-        stage('Provision Infrastructure') {
+
+        stage('Provision AWS Resources') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
                     dir('terraform') {
-                        sh 'terraform init'
+                        sh 'terraform init -migrate-state -force-copy'
+                        sh 'terraform destroy -auto-approve'
                         sh 'terraform apply -auto-approve'
+                        sh 'terraform output instance_public_ip'
                     }
                 }
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t rewg/petclinic:latest .'
-                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
                 sh 'docker push rewg/petclinic:latest'
             }
         }
+
         stage('Deploy to AWS') {
             steps {
                 withAWS(credentials: 'aws-credentials') {
@@ -94,7 +109,8 @@ pipeline {
             }
         }
     }
-    post {
+
+   post {
         always {
             withAWS(credentials: 'aws-credentials') {
                 dir('terraform') {
