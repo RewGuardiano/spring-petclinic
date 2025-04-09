@@ -51,29 +51,42 @@ resource "aws_instance" "app_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              set -e  # Exit on any error
               echo "Starting user_data script..." > /var/log/user-data.log
               # Update the package index
+              echo "Updating package index..." >> /var/log/user-data.log
               sudo yum update -y >> /var/log/user-data.log 2>&1
+              if [ $? -eq 0 ]; then
+                  echo "Package index updated successfully." >> /var/log/user-data.log
+              else
+                  echo "Failed to update package index." >> /var/log/user-data.log
+              fi
               # Try installing Docker via amazon-linux-extras
+              echo "Trying to install Docker via amazon-linux-extras..." >> /var/log/user-data.log
               if sudo amazon-linux-extras install docker -y >> /var/log/user-data.log 2>&1; then
                   echo "Docker installed via amazon-linux-extras" >> /var/log/user-data.log
               else
                   echo "Falling back to Docker CE repository..." >> /var/log/user-data.log
                   # Install prerequisites
+                  echo "Installing yum-utils..." >> /var/log/user-data.log
                   sudo yum install -y yum-utils >> /var/log/user-data.log 2>&1
                   # Add Docker repository
+                  echo "Adding Docker CE repository..." >> /var/log/user-data.log
                   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >> /var/log/user-data.log 2>&1
                   # Install Docker
+                  echo "Installing Docker CE..." >> /var/log/user-data.log
                   sudo yum install -y docker-ce docker-ce-cli containerd.io >> /var/log/user-data.log 2>&1
               fi
               # Start Docker service
+              echo "Starting Docker service..." >> /var/log/user-data.log
               sudo systemctl start docker >> /var/log/user-data.log 2>&1
               # Enable Docker to start on boot
+              echo "Enabling Docker service..." >> /var/log/user-data.log
               sudo systemctl enable docker >> /var/log/user-data.log 2>&1
               # Add the ec2-user to the docker group
+              echo "Adding ec2-user to docker group..." >> /var/log/user-data.log
               sudo usermod -aG docker ec2-user >> /var/log/user-data.log 2>&1
               # Verify Docker installation
+              echo "Verifying Docker installation..." >> /var/log/user-data.log
               sudo -u ec2-user docker --version >> /var/log/user-data.log 2>&1
               echo "user_data script completed." >> /var/log/user-data.log
               EOF
