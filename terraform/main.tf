@@ -149,6 +149,15 @@ resource "aws_instance" "app_server" {
                     echo "Docker installation failed." >> /var/log/user-data.log
                 fi
 
+                # Create a Docker network
+                echo "Creating Docker network 'docker-devops-network'..." >> /var/log/user-data.log
+                sudo docker network create docker-devops-network >> /var/log/user-data.log 2>&1
+                if [ $? -eq 0 ]; then
+                    echo "Docker network created successfully." >> /var/log/user-data.log
+                else
+                    echo "Failed to create Docker network." >> /var/log/user-data.log
+                fi
+
                 # Configure Docker daemon to expose metrics
                 echo "Configuring Docker daemon to expose metrics..." >> /var/log/user-data.log
                 sudo mkdir -p /etc/docker
@@ -195,7 +204,7 @@ resource "aws_instance" "app_server" {
                     echo "Failed to start Node Exporter." >> /var/log/user-data.log
                 fi
 
-                # Run Prometheus as a Docker container
+                # Run Prometheus as a Docker container on the custom network
                 echo "Running Prometheus as a Docker container..." >> /var/log/user-data.log
                 sudo mkdir -p /etc/prometheus
                 cat <<EOT > /etc/prometheus/prometheus.yml
@@ -205,15 +214,20 @@ resource "aws_instance" "app_server" {
                 scrape_configs:
                   - job_name: 'prometheus'
                     static_configs:
-                      - targets: ['localhost:9090']
+                      - targets: ['prometheus:9090']
                   - job_name: 'node'
                     static_configs:
-                      - targets: ['localhost:9100']
+                      - targets: ['host.docker.internal:9100']
                   - job_name: 'docker'
                     static_configs:
-                      - targets: ['localhost:9323']
+                      - targets: ['host.docker.internal:9323']
+                  - job_name: 'petclinic'
+                    static_configs:
+                      - targets: ['petclinic-blue:8081']
+                    metrics_path: '/actuator/prometheus'
                 EOT
                 sudo docker run -d --name prometheus \
+                  --network docker-devops-network \
                   -p 9090:9090 \
                   -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
                   prom/prometheus:latest \
@@ -225,9 +239,10 @@ resource "aws_instance" "app_server" {
                     echo "Failed to start Prometheus container." >> /var/log/user-data.log
                 fi
 
-                # Run Grafana as a Docker container
+                # Run Grafana as a Docker container on the custom network
                 echo "Running Grafana as a Docker container..." >> /var/log/user-data.log
                 sudo docker run -d --name grafana \
+                  --network docker-devops-network \
                   -p 3000:3000 \
                   grafana/grafana:latest >> /var/log/user-data.log 2>&1
                 if [ $? -eq 0 ]; then
