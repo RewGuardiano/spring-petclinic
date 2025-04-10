@@ -151,9 +151,9 @@ resource "aws_instance" "app_server" {
 
                 # Create a Docker network
                 echo "Creating Docker network 'docker-devops-network'..." >> /var/log/user-data.log
-                sudo docker network create docker-devops-network >> /var/log/user-data.log 2>&1
+                sudo docker network create docker-devops-network >> /var/log/user-data.log 2>&1 || true
                 if [ $? -eq 0 ]; then
-                    echo "Docker network created successfully." >> /var/log/user-data.log
+                    echo "Docker network created successfully or already exists." >> /var/log/user-data.log
                 else
                     echo "Failed to create Docker network." >> /var/log/user-data.log
                 fi
