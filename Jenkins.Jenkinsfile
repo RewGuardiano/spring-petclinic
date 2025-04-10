@@ -93,29 +93,20 @@ pipeline {
                                         exit 1;
                                     fi &&
                                     echo "Ensuring Docker network exists..." &&
-                                    if ! docker network ls | grep -q docker-devops-network; then
+                                    if ! sudo docker network ls | grep -q docker-devops-network; then
                                         echo "Creating Docker network..." &&
-                                        sudo docker network create docker-devops-network;
-                                    fi &&
-                                    if getent group docker >/dev/null; then
-                                        echo "Docker group exists, using sg..." &&
-                                        sg docker -c "docker --version" &&
-                                        echo "Pulling Docker image..." &&
-                                        sg docker -c "docker pull rewg/petclinic:latest" &&
-                                        echo "Stopping and removing existing blue container if it exists..." &&
-                                        sg docker -c "docker rm -f petclinic-blue || true" &&
-                                        echo "Running Docker container on docker-devops-network..." &&
-                                        sg docker -c "docker run -d --name petclinic-blue --network docker-devops-network -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest";
+                                        sudo docker network create docker-devops-network || true;
                                     else
-                                        echo "Docker group does not exist, using sudo..." &&
-                                        sudo docker --version &&
-                                        echo "Pulling Docker image..." &&
-                                        sudo docker pull rewg/petclinic:latest &&
-                                        echo "Stopping and removing existing blue container if it exists..." &&
-                                        sudo docker rm -f petclinic-blue || true &&
-                                        echo "Running Docker container on docker-devops-network..." &&
-                                        sudo docker run -d --name petclinic-blue --network docker-devops-network -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest;
-                                    fi
+                                        echo "Docker network already exists.";
+                                    fi &&
+                                    echo "Docker group exists, using sg..." &&
+                                    sg docker -c "docker --version" &&
+                                    echo "Pulling Docker image..." &&
+                                    sg docker -c "docker pull rewg/petclinic:latest" &&
+                                    echo "Stopping and removing existing blue container if it exists..." &&
+                                    sg docker -c "docker rm -f petclinic-blue || true" &&
+                                    echo "Running Docker container on docker-devops-network..." &&
+                                    sg docker -c "docker run -d --name petclinic-blue --network docker-devops-network -p 8081:8081 -e SERVER_PORT=8081 rewg/petclinic:latest"
                                 '
                             """
                         }
