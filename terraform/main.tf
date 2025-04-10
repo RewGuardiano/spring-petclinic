@@ -69,6 +69,14 @@ resource "aws_security_group" "app_sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
+    ingress {
+        description = "Grafana access"
+        from_port   = 3000
+        to_port     = 3000
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
     egress {
         from_port   = 0
         to_port     = 0
@@ -99,7 +107,7 @@ resource "aws_instance" "app_server" {
     instance_type = "t3.micro"
     key_name      = "AWS_Key_Pair"
     vpc_security_group_ids = [aws_security_group.app_sg.id]
-    subnet_id      = "subnet-098f458e7260ac711" # Replace with the correct subnet ID
+    subnet_id      = "subnet-098f458e7260ac711"
 
     user_data = <<-EOF
                 #!/bin/bash
@@ -141,58 +149,20 @@ resource "aws_instance" "app_server" {
                     echo "Docker installation failed." >> /var/log/user-data.log
                 fi
 
-                # Install Prometheus
-                echo "Installing Prometheus..." >> /var/log/user-data.log
-                wget https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.linux-amd64.tar.gz >> /var/log/user-data.log 2>&1
-                tar -xzf prometheus-2.47.0.linux-amd64.tar.gz >> /var/log/user-data.log 2>&1
-                sudo mv prometheus-2.47.0.linux-amd64 /usr/local/prometheus >> /var/log/user-data.log 2>&1
-                sudo mkdir -p /usr/local/prometheus/data >> /var/log/user-data.log 2>&1
-                sudo chown -R ec2-user:ec2-user /usr/local/prometheus >> /var/log/user-data.log 2>&1
-                cat <<EOT > /usr/local/prometheus/prometheus.yml
-                global:
-                  scrape_interval: 15s
-
-                scrape_configs:
-                  - job_name: 'prometheus'
-                    static_configs:
-                      - targets: ['localhost:9090']
-                  - job_name: 'node'
-                    static_configs:
-                      - targets: ['localhost:9100']
-                  - job_name: 'docker'
-                    static_configs:
-                      - targets: ['localhost:9323']
+                # Configure Docker daemon to expose metrics
+                echo "Configuring Docker daemon to expose metrics..." >> /var/log/user-data.log
+                sudo mkdir -p /etc/docker
+                cat <<EOT > /etc/docker/daemon.json
+                {
+                  "metrics-addr": "0.0.0.0:9323",
+                  "experimental": true
+                }
                 EOT
-                sudo chown ec2-user:ec2-user /usr/local/prometheus/prometheus.yml >> /var/log/user-data.log 2>&1
-                cat <<EOT > /etc/systemd/system/prometheus.service
-                [Unit]
-                Description=Prometheus Monitoring
-                Wants=network-online.target
-                After=network-online.target
-
-                [Service]
-                User=ec2-user
-                Group=ec2-user
-                Type=simple
-                ExecStart=/usr/local/prometheus/prometheus \
-                  --config.file=/usr/local/prometheus/prometheus.yml \
-                  --storage.tsdb.path=/usr/local/prometheus/data \
-                  --log.level=debug
-                StandardOutput=journal
-                StandardError=journal
-                Restart=always
-                RestartSec=5
-
-                [Install]
-                WantedBy=multi-user.target
-                EOT
-                sudo systemctl daemon-reload >> /var/log/user-data.log 2>&1
-                sudo systemctl enable prometheus >> /var/log/user-data.log 2>&1
-                sudo systemctl start prometheus >> /var/log/user-data.log 2>&1
+                sudo systemctl restart docker >> /var/log/user-data.log 2>&1
                 if [ $? -eq 0 ]; then
-                    echo "Prometheus installed and started successfully." >> /var/log/user-data.log
+                    echo "Docker daemon configured and restarted successfully." >> /var/log/user-data.log
                 else
-                    echo "Failed to start Prometheus." >> /var/log/user-data.log
+                    echo "Failed to restart Docker daemon." >> /var/log/user-data.log
                 fi
 
                 # Install Node Exporter
@@ -225,16 +195,45 @@ resource "aws_instance" "app_server" {
                     echo "Failed to start Node Exporter." >> /var/log/user-data.log
                 fi
 
-                # Install Docker Exporter
-                echo "Installing Docker Exporter..." >> /var/log/user-data.log
-                sudo docker run -d --name docker-exporter \
-                  -v /var/run/docker.sock:/var/run/docker.sock \
-                  -p 9323:9323 \
-                  prom/container-exporter >> /var/log/user-data.log 2>&1
+                # Run Prometheus as a Docker container
+                echo "Running Prometheus as a Docker container..." >> /var/log/user-data.log
+                sudo mkdir -p /etc/prometheus
+                cat <<EOT > /etc/prometheus/prometheus.yml
+                global:
+                  scrape_interval: 15s
+
+                scrape_configs:
+                  - job_name: 'prometheus'
+                    static_configs:
+                      - targets: ['localhost:9090']
+                  - job_name: 'node'
+                    static_configs:
+                      - targets: ['localhost:9100']
+                  - job_name: 'docker'
+                    static_configs:
+                      - targets: ['localhost:9323']
+                EOT
+                sudo docker run -d --name prometheus \
+                  -p 9090:9090 \
+                  -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
+                  prom/prometheus:latest \
+                  --config.file=/etc/prometheus/prometheus.yml \
+                  --log.level=debug >> /var/log/user-data.log 2>&1
                 if [ $? -eq 0 ]; then
-                    echo "Docker Exporter installed and started successfully." >> /var/log/user-data.log
+                    echo "Prometheus container started successfully." >> /var/log/user-data.log
                 else
-                    echo "Failed to start Docker Exporter." >> /var/log/user-data.log
+                    echo "Failed to start Prometheus container." >> /var/log/user-data.log
+                fi
+
+                # Run Grafana as a Docker container
+                echo "Running Grafana as a Docker container..." >> /var/log/user-data.log
+                sudo docker run -d --name grafana \
+                  -p 3000:3000 \
+                  grafana/grafana:latest >> /var/log/user-data.log 2>&1
+                if [ $? -eq 0 ]; then
+                    echo "Grafana container started successfully." >> /var/log/user-data.log
+                else
+                    echo "Failed to start Grafana container." >> /var/log/user-data.log
                 fi
 
                 echo "user_data script completed." >> /var/log/user-data.log
