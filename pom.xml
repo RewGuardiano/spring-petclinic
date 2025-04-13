@@ -394,4 +394,31 @@
     </profile>
   </profiles>
 
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-checkstyle-plugin</artifactId>
+    <version>3.1.1</version>
+    <executions>
+        <execution>
+            <id>nohttp-checkstyle-validation</id>
+            <phase>validate</phase>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <configLocation>src/checkstyle/nohttp-checkstyle.xml</configLocation>
+        <excludes>terraform/**</excludes>
+        <failOnViolation>true</failOnViolation>
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>8.32</version>
+        </dependency>
+    </dependencies>
+</plugin>
+
 </project>
