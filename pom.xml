@@ -13,7 +13,6 @@
   <name>petclinic</name>
 
   <properties>
-
     <!-- Generic properties -->
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,7 +26,6 @@
     <node.version>v8.11.1</node.version>
     <nohttp-checkstyle.version>0.0.4.RELEASE</nohttp-checkstyle.version>
     <spring-format.version>0.0.27</spring-format.version>
-
   </properties>
 
   <dependencies>
@@ -154,7 +152,8 @@
               <encoding>UTF-8</encoding>
               <sourceDirectories>${basedir}</sourceDirectories>
               <includes>**/*</includes>
-              <excludes>**/.git/**/*,**/.idea/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class</excludes>
+              <excludes>**/.git/**/*,**/.idea/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class,terraform/**</excludes>
+              <failOnViolation>true</failOnViolation>
             </configuration>
             <goals>
               <goal>check</goal>
@@ -225,7 +224,6 @@
           <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 
@@ -393,32 +391,4 @@
       </build>
     </profile>
   </profiles>
-
-  <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-checkstyle-plugin</artifactId>
-    <version>3.1.1</version>
-    <executions>
-        <execution>
-            <id>nohttp-checkstyle-validation</id>
-            <phase>validate</phase>
-            <goals>
-                <goal>check</goal>
-            </goals>
-        </execution>
-    </executions>
-    <configuration>
-        <configLocation>src/checkstyle/nohttp-checkstyle.xml</configLocation>
-        <excludes>terraform/**</excludes>
-        <failOnViolation>true</failOnViolation>
-    </configuration>
-    <dependencies>
-        <dependency>
-            <groupId>com.puppycrawl.tools</groupId>
-            <artifactId>checkstyle</artifactId>
-            <version>8.32</version>
-        </dependency>
-    </dependencies>
-</plugin>
-
 </project>
