@@ -66,7 +66,7 @@ pipeline {
                         script {
                             def ec2Ip = sh(script: 'terraform output -raw instance_public_ip', returnStdout: true).trim()
                             sh 'ls -l /var/jenkins_home/AWS_Key_Pair.pem'
-                            sh 'which ssh' // Debug: Check if ssh is available
+                            sh 'which ssh'
                             sh """
                                 ssh -i /var/jenkins_home/AWS_Key_Pair.pem -o StrictHostKeyChecking=no ec2-user@${ec2Ip} '
                                     echo "Checking Docker installation..." &&
